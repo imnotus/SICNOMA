@@ -253,6 +253,7 @@ void PA_NOMA_pos(double lambda_IoT, double alpha, double noise, double L) {
     }
     ifs.close();
     unsigned long num_BS = BS_pos.size();
+    cout << num_BS << endl;
 //    int num_BS = poisson_dist(PI * radius * radius * lambda_BS);
 //    //BSの座標を設定
 //    vector<pair<double, double>> BS_pos(num_BS);
@@ -382,6 +383,7 @@ void PA_NOMA_thp(double lambda_IoT, double alpha, double noise, double L) {
                 int level;
                 if (device.at(i).dst_to_origin > 1) level = L;
                 else level = L * device.at(i).dst_to_origin;
+                if (level == 0) level = 1;
                 device.at(i).level = level;
                 device.at(i).coef = theta * pow(theta + 1, L - level);
                 LEV.at(level-1) += theta * pow(theta + 1, L - level);
@@ -401,7 +403,7 @@ void PA_NOMA_thp(double lambda_IoT, double alpha, double noise, double L) {
             double P = device.at(f).coef;
             int l = device.at(f).level;
             double si = 0;
-            for (int j = 0; j <= l; j++) {
+            for (int j = 0; j < l; j++) {
                 si += LEV.at(j);
             }
             double SINR = P / (SI + si - P + noise);
@@ -461,8 +463,8 @@ int main() {
     string filename3 = to_string(k) + "PA_NOMA_thp.txt";
     string filename4 = to_string(k) + "PA_NOMA_pos.txt";
     //outputfile1.open(filename1);
-    outputfile2.open(filename2);
-    outputfile1.open(filename1);
+    //outputfile2.open(filename2);
+    //outputfile1.open(filename1);
     outputfile3.open(filename3);
     outputfile4.open(filename4);
     
@@ -471,9 +473,11 @@ int main() {
 //    }
     outputfile3 << k << " ";
     for (double L = 3.0; L <= 5; L++) {
+        outputfile4 << "# L = " << L << endl;
         double alpha = 4.5;
         if (key == 0) PA_NOMA_pos(k, alpha, 0, L);
         else PA_NOMA_thp(k, alpha, 0, L);
+        outputfile4 << endl << endl;
     }
     outputfile3 << endl;
     
