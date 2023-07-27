@@ -11,13 +11,12 @@ constexpr double PI = 3.14159265358979323846264338;
 const double theta = pow(10, 0.4);
 //const double delta = 2.0 / pass_loss_exponent;
 const double lambda_BS = 1.;
-const double POWER = 1.0;
+//const double POWER = 1.0;
 
 //出力ファイルを開く
 ofstream outputfile1;
 ofstream outputfile2;
-ofstream outputfile3;
-ofstream outputfile4;
+ofstream outputfile;
 
 struct pos {
     double x;
@@ -237,10 +236,10 @@ void PA_NOMA_pos(double lambda_IoT, double alpha, double noise, double L) {
     cout << "pass loss exp : " << alpha << endl;
     
     //座標読み込み
-    string filename1 = "BS_pos.txt";
+    string filename0 = "BS_pos.txt";
     vector<pair<double, double>> BS_pos;
     ifstream readingfile;
-    readingfile.open(filename1);
+    readingfile.open(filename0);
     ifstream ifs("BS_pos.txt");
         if (ifs.fail()) {
            cerr << "Cannot open file\n";
@@ -249,7 +248,7 @@ void PA_NOMA_pos(double lambda_IoT, double alpha, double noise, double L) {
     double x, y;
     while (ifs >> x >> y) {
         BS_pos.push_back(make_pair(x, y));
-        //cout << x << " " << y << endl;
+        cout << x << " " << y << endl;
     }
     ifs.close();
     unsigned long num_BS = BS_pos.size();
@@ -264,7 +263,7 @@ void PA_NOMA_pos(double lambda_IoT, double alpha, double noise, double L) {
 //        outputfile1 << BS_pos.at(i).first << " " << BS_pos.at(i).second << endl;
 //    }
     
-    
+    outputfile << "# L = " << L << endl;
     bool p_flag[4] = {true, true, true, true};
     cout << "Progress is 0%";
     for (int t = 0; t < end_time; t++) {
@@ -320,7 +319,7 @@ void PA_NOMA_pos(double lambda_IoT, double alpha, double noise, double L) {
             double SINR = P / (SI + si - P + noise);
             if (SINR > theta) {
                 success++;
-                outputfile4 << device.at(i).pos.first << " " << device.at(i).pos.second << endl;
+                outputfile << device.at(i).pos.first << " " << device.at(i).pos.second << endl;
             }
         }
         
@@ -333,6 +332,7 @@ void PA_NOMA_pos(double lambda_IoT, double alpha, double noise, double L) {
         else if (progress > 0.2 && p_flag[0]) {cout << "...20%"; p_flag[0] = false;}
     }
     cout << "...100%" << endl << endl;
+    outputfile << endl << endl;
     
     //double res = success / end_time;
     //double I = thp_theo(lambda_IoT, lambda_BS, alpha);
@@ -345,6 +345,7 @@ void PA_NOMA_thp(double lambda_IoT, double alpha, double noise, double L) {
     double success = 0.0;
     cout << "pass loss exp : " << alpha << endl;
     
+    outputfile << lambda_IoT << " ";
     bool p_flag[4] = {true, true, true, true};
     cout << "Progress is 0%";
     for (int i = 0; i < end_time; i++) {
@@ -380,10 +381,9 @@ void PA_NOMA_thp(double lambda_IoT, double alpha, double noise, double L) {
             }
             //チャネル条件の逆数をかけて消えるので今は無視
             if (device.at(i).state) { //原点にアクセスするならallocateされた電力を足す．
-                int level;
-                if (device.at(i).dst_to_origin > 1) level = L;
-                else level = L * device.at(i).dst_to_origin;
+                int level = L * device.at(i).dst_to_origin;;
                 if (level == 0) level = 1;
+                else if (level >= L) level = L;
                 device.at(i).level = level;
                 device.at(i).coef = theta * pow(theta + 1, L - level);
                 LEV.at(level-1) += theta * pow(theta + 1, L - level);
@@ -423,7 +423,7 @@ void PA_NOMA_thp(double lambda_IoT, double alpha, double noise, double L) {
     double res = success / end_time;
     //double I = thp_theo(lambda_IoT, lambda_BS, alpha);
     cout << "Throughput : " <<  res << endl << endl;
-    outputfile3 << res << " ";
+    outputfile << res << " ";
 }
 
 
@@ -453,36 +453,35 @@ void PA_NOMA_thp(double lambda_IoT, double alpha, double noise, double L) {
 
 
 int main() {
-    cout << "Pos 0, Thp 1 :";
+    cout << "Pos 0, Thp 1, SIC 2 :";
     double key; cin >> key; cout << endl;
     cout << "Put start lambda IoT : ";
     double k; cin >> k; cout << endl;
     
-    string filename2 = "Second_decode_pos.txt";
-    string filename1 = "First_decode_pos.txt";
-    string filename3 = to_string(k) + "PA_NOMA_thp.txt";
-    string filename4 = to_string(k) + "PA_NOMA_pos.txt";
-    //outputfile1.open(filename1);
-    //outputfile2.open(filename2);
-    //outputfile1.open(filename1);
-    outputfile3.open(filename3);
-    outputfile4.open(filename4);
+    string filename;
+    if (key == 0) filename = to_string(k) + "PA_NOMA_pos.txt";
+    else if (key == 1) filename = to_string(k) + "PA_NOMA_thp.txt";
+    else {
+        string filename2 = "Second_decode_pos.txt";
+        string filename1 = "First_decode_pos.txt";
+        outputfile2.open(filename2);
+        outputfile1.open(filename1);
+    }
+    
+    outputfile.open(filename);
     
 //    for (double alpha = 2.5; alpha <= 4.5; alpha += 0.5) {
 //        SIC_NOMA_thp(k, alpha, 0);
 //    }
-    outputfile3 << k << " ";
+    
     for (double L = 3.0; L <= 5; L++) {
-        outputfile4 << "# L = " << L << endl;
         double alpha = 4.5;
         if (key == 0) PA_NOMA_pos(k, alpha, 0, L);
         else PA_NOMA_thp(k, alpha, 0, L);
-        outputfile4 << endl << endl;
     }
-    outputfile3 << endl;
+    
     
     outputfile1.close();
     outputfile2.close();
-    outputfile3.close();
-    outputfile4.close();
+    outputfile.close();
 }
