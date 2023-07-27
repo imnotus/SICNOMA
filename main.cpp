@@ -6,7 +6,7 @@ float inf = numeric_limits<float>::infinity();
 using ll = long long;
 const double radius = 100;
 const double GAMMA = pow(10, 6.0 / 10.0);
-const double end_time = 100000;
+const double end_time = 1000;
 constexpr double PI = 3.14159265358979323846264338;
 const double theta = pow(10, 0.4);
 //const double delta = 2.0 / pass_loss_exponent;
@@ -248,7 +248,7 @@ void PA_NOMA_pos(double lambda_IoT, double alpha, double noise, double L) {
     double x, y;
     while (ifs >> x >> y) {
         BS_pos.push_back(make_pair(x, y));
-        cout << x << " " << y << endl;
+        //cout << x << " " << y << endl;
     }
     ifs.close();
     unsigned long num_BS = BS_pos.size();
@@ -292,9 +292,9 @@ void PA_NOMA_pos(double lambda_IoT, double alpha, double noise, double L) {
             }
             
             if (device.at(i).state) { //原点にアクセスするならallocateされた電力を足す．
-                int level;
-                if (device.at(i).dst_to_origin > 1) level = L;
-                else level = L * device.at(i).dst_to_origin;
+                int level = L * device.at(i).dst_to_origin;;
+                if (level == 0) level = 1;
+                else if (level >= L) level = L;
                 device.at(i).level = level;
                 device.at(i).coef = theta * pow(theta + 1, L - level);
                 LEV.at(level-1) += theta * pow(theta + 1, L - level);
