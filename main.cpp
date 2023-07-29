@@ -319,7 +319,7 @@ void PA_NOMA_pos(double lambda_IoT, double alpha, double noise, double L) {
             double SINR = P / (SI + si - P + noise);
             if (SINR > theta) {
                 success++;
-                outputfile << device.at(i).pos.first << " " << device.at(i).pos.second << endl;
+                outputfile << device.at(f).pos.first << " " << device.at(f).pos.second << endl;
             }
         }
         
