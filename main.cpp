@@ -231,7 +231,7 @@ void SIC_NOMA_thp(double lambda_IoT, double alpha, double noise) {
 
 
 //Power allocation
-void PA_NOMA_pos(double lambda_IoT, double alpha, double noise, double L) {
+void PA_NOMA_pos(double lambda_IoT, double alpha, double noise, double L, int op) {
     double success = 0.0;
     cout << "pass loss exp : " << alpha << endl;
     
@@ -291,10 +291,16 @@ void PA_NOMA_pos(double lambda_IoT, double alpha, double noise, double L) {
                 }
             }
             
-            if (device.at(i).state) { //原点にアクセスするならallocateされた電力を足す．
-                int level = L * device.at(i).dst_to_origin;;
-                if (level == 0) level = 1;
-                else if (level >= L) level = L;
+            if (device.at(i).state) {
+                int level;
+                if (op == 0) { //原点にアクセスするならallocateされた電力を足す．
+                    level = L * device.at(i).dst_to_origin;
+                    if (level == 0) level = 1;
+                    else if (level >= L) level = L;
+                } else { //ランダムに電力レベルを選択
+                    int r = urand() * 1000;
+                    level = r % (int)L + 1;
+                }
                 device.at(i).level = level;
                 device.at(i).coef = theta * pow(theta + 1, L - level);
                 LEV.at(level-1) += theta * pow(theta + 1, L - level);
@@ -313,7 +319,7 @@ void PA_NOMA_pos(double lambda_IoT, double alpha, double noise, double L) {
             double P = device.at(f).coef;
             int l = device.at(f).level;
             double si = 0;
-            for (int j = 0; j <= l; j++) {
+            for (int j = 0; j < l; j++) {
                 si += LEV.at(j);
             }
             double SINR = P / (SI + si - P + noise);
@@ -341,7 +347,7 @@ void PA_NOMA_pos(double lambda_IoT, double alpha, double noise, double L) {
 }
 
 //Power allocated NOMA
-void PA_NOMA_thp(double lambda_IoT, double alpha, double noise, double L) {
+void PA_NOMA_thp(double lambda_IoT, double alpha, double noise, double L, int op) {
     double success = 0.0;
     cout << "pass loss exp : " << alpha << endl;
     
@@ -380,10 +386,16 @@ void PA_NOMA_thp(double lambda_IoT, double alpha, double noise, double L) {
                 }
             }
             //チャネル条件の逆数をかけて消えるので今は無視
-            if (device.at(i).state) { //原点にアクセスするならallocateされた電力を足す．
-                int level = L * device.at(i).dst_to_origin;;
-                if (level == 0) level = 1;
-                else if (level >= L) level = L;
+            if (device.at(i).state) {
+                int level;
+                if (op == 0) { //原点にアクセスするならallocateされた電力を足す．
+                    level = L * device.at(i).dst_to_origin;
+                    if (level == 0) level = 1;
+                    else if (level >= L) level = L;
+                } else { //ランダムに電力レベルを選択
+                    int r = urand() * 1000;
+                    level = r % (int)L + 1;
+                }
                 device.at(i).level = level;
                 device.at(i).coef = theta * pow(theta + 1, L - level);
                 LEV.at(level-1) += theta * pow(theta + 1, L - level);
@@ -427,6 +439,9 @@ void PA_NOMA_thp(double lambda_IoT, double alpha, double noise, double L) {
 }
 
 
+
+
+
 //void decode_dst() {
 //    //座標読み込み
 //    string filename1 = "2.0Second_decode_pos.txt";
@@ -455,9 +470,11 @@ void PA_NOMA_thp(double lambda_IoT, double alpha, double noise, double L) {
 int main() {
     cout << "Pos 0, Thp 1, SIC 2 :";
     double key; cin >> key; cout << endl;
+    cout << "Power allocate 0, Random any :";
+    double op; cin >> op; cout << endl;
     cout << "Put start lambda IoT : ";
     double k; cin >> k; cout << endl;
-    
+
     string filename;
     if (key == 0) filename = to_string(k) + "PA_NOMA_pos.txt";
     else if (key == 1) filename = to_string(k) + "PA_NOMA_thp.txt";
@@ -467,20 +484,20 @@ int main() {
         outputfile2.open(filename2);
         outputfile1.open(filename1);
     }
-    
+
     outputfile.open(filename);
-    
+
 //    for (double alpha = 2.5; alpha <= 4.5; alpha += 0.5) {
 //        SIC_NOMA_thp(k, alpha, 0);
 //    }
-    
+
     for (double L = 3.0; L <= 5; L++) {
         double alpha = 4.5;
-        if (key == 0) PA_NOMA_pos(k, alpha, 0, L);
-        else PA_NOMA_thp(k, alpha, 0, L);
+        if (key == 0) PA_NOMA_pos(k, alpha, 0, L, op);
+        else PA_NOMA_thp(k, alpha, 0, L, op);
     }
-    
-    
+
+
     outputfile1.close();
     outputfile2.close();
     outputfile.close();
